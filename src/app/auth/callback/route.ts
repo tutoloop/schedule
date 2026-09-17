@@ -21,7 +21,10 @@ export async function GET(request: Request) {
       });
       // Vercel 等のプロキシ配下では x-forwarded-host を優先
       const forwardedHost = request.headers.get("x-forwarded-host");
-      const base = forwardedHost ? `https://${forwardedHost}` : origin;
+      const forwardedProto = request.headers.get("x-forwarded-proto");
+      const isLocal = process.env.NODE_ENV === "development";
+      const base =
+        forwardedHost && !isLocal ? `${forwardedProto ?? "https"}://${forwardedHost}` : origin;
       return NextResponse.redirect(`${base}${next.startsWith("/") ? next : "/dashboard"}`);
     }
   }
