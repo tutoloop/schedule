@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { siteOrigin } from "@/lib/site";
 import { daysUntil, fmtDate, fmtRange, isExpired } from "@/lib/time";
-import type { Availability, Lesson, LessonEdit, Schedule } from "@/lib/types";
+import { one, type Availability, type Lesson, type LessonEdit, type Schedule } from "@/lib/types";
 import { CopyUrl } from "./CopyUrl";
 import { LessonManager } from "./LessonManager";
 import { DeleteScheduleButton } from "./DeleteScheduleButton";
@@ -29,8 +29,8 @@ export default async function SchedulePage({ params, searchParams }: PageProps<"
     admin.from("lesson_edits").select("*").eq("schedule_id", id).order("created_at", { ascending: false }),
   ]);
 
-  const s = schedule as Schedule & { profiles: { email: string; name: string | null }; responses: { student_name: string; submitted_at: string; updated_at: string }[] };
-  const response = s.responses[0];
+  const s = schedule as Schedule & { profiles: { email: string; name: string | null }; responses: { student_name: string; submitted_at: string; updated_at: string }[] | { student_name: string; submitted_at: string; updated_at: string } | null };
+  const response = one(s.responses);
   const expired = isExpired(s.deadline);
   const left = daysUntil(s.deadline);
   const url = `${await siteOrigin()}/s/${s.token}`;

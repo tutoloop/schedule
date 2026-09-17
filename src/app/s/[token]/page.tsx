@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isExpired } from "@/lib/time";
-import type { Availability, Slot } from "@/lib/types";
+import { one, type Availability, type Slot } from "@/lib/types";
 import { StudentResponder } from "./StudentResponder";
 
 export const dynamic = "force-dynamic";
@@ -35,11 +35,12 @@ export default async function StudentPage({ params }: PageProps<"/s/[token]">) {
       .eq("status", "active")
       .eq("schedules.teacher_id", schedule.teacher_id)
       .neq("schedule_id", schedule.id)
-      .like("date", `${schedule.year_month}-%`),
+      .gte("date", `${schedule.year_month}-01`)
+      .lte("date", `${schedule.year_month}-31`),
   ]);
 
   const teacher = schedule.profiles as unknown as { name: string | null };
-  const response = (schedule.responses as { student_name: string }[])[0];
+  const response = one(schedule.responses as { student_name: string }[] | { student_name: string } | null);
 
   return (
     <Shell>

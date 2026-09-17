@@ -66,3 +66,9 @@ export type LessonEdit = {
 
 /** 空き時間帯（クライアント側の入力用） */
 export type Slot = { date: string; start_min: number; end_min: number };
+
+/** PostgREST の関連は 1対1 だとオブジェクト、1対多だと配列で返るため吸収する */
+export function one<T>(v: T | T[] | null | undefined): T | undefined {
+  if (Array.isArray(v)) return v[0];
+  return v ?? undefined;
+}

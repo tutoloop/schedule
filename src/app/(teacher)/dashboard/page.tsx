@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { one } from "@/lib/types";
 import { daysUntil, fmtDate, fmtHours, fmtMonth, isExpired } from "@/lib/time";
 
 type Row = {
@@ -12,7 +13,7 @@ type Row = {
   created_at: string;
   teacher_id: string;
   profiles: { email: string; name: string | null };
-  responses: { submitted_at: string; updated_at: string }[];
+  responses: { submitted_at: string; updated_at: string }[] | { submitted_at: string; updated_at: string } | null;
   lessons: { start_min: number; end_min: number; status: string }[];
 };
 
@@ -70,8 +71,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           </div>
         )}
         <div className="flex items-end gap-2">
-          <button className="btn-primary flex-1 py-2">絞り込む</button>
-          <Link href="/dashboard" className="btn-ghost py-2">解除</Link>
+          <button className="btn-primary flex-1 px-3 py-2 whitespace-nowrap">絞り込む</button>
+          <Link href="/dashboard" className="btn-ghost px-3 py-2 whitespace-nowrap">解除</Link>
         </div>
       </form>
 
@@ -82,7 +83,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       ) : (
         <ul className="space-y-3">
           {rows.map((r) => {
-            const answered = r.responses.length > 0;
+            const answered = !!one(r.responses);
             const expired = isExpired(r.deadline);
             const left = daysUntil(r.deadline);
             const total = r.lessons.filter((l) => l.status === "active").reduce((a, l) => a + (l.end_min - l.start_min), 0);

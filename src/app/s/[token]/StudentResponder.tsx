@@ -88,7 +88,7 @@ export function StudentResponder(p: Props) {
   if (done) {
     return (
       <div className="card text-center">
-        <div className="text-4xl">🎉</div>
+        <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-green text-3xl font-bold text-white">✓</div>
         <p className="mt-2 text-lg font-bold">回答を送信しました！</p>
         <p className="mt-1 text-sm text-muted">{p.teacherName} 先生に通知しました。</p>
         <ul className="mt-4 space-y-1 text-left text-sm">
@@ -178,25 +178,31 @@ export function StudentResponder(p: Props) {
             </div>
           )}
 
-          <div className="card sticky bottom-3 shadow-lg">
-            <div className="mb-2 flex items-baseline justify-between">
-              <span className="font-bold">選択中</span>
-              <span className="text-sm text-muted">{lessons.length}コマ / 合計 <b className="text-ink">{fmtHours(total)}</b></span>
-            </div>
-            {sorted.length > 0 && (
-              <ul className="mb-3 max-h-40 space-y-1 overflow-y-auto text-sm">
+          {sorted.length > 0 && (
+            <div className="card">
+              <div className="mb-2 font-bold">選択した授業</div>
+              <ul className="space-y-1 text-sm">
                 {sorted.map((l, i) => (
                   <li key={i} className="flex items-center justify-between rounded-lg bg-bg px-3 py-1.5">
                     <span>{fmtDate(l.date)} {fmtRange(l.start_min, l.end_min)}</span>
-                    <button type="button" onClick={() => remove(l)} className="text-muted" aria-label="取消">×</button>
+                    <button type="button" onClick={() => remove(l)} className="px-2 text-muted" aria-label="取消">×</button>
                   </li>
                 ))}
               </ul>
-            )}
-            {error && <p className="mb-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-600">{error}</p>}
-            <button type="button" onClick={submit} disabled={pending || lessons.length === 0 || !name.trim()} className="btn-accent w-full text-base">
-              {pending ? "送信中..." : p.answered ? "変更を送信する" : "回答完了"}
-            </button>
+            </div>
+          )}
+
+          {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-600">{error}</p>}
+
+          <div className="sticky bottom-0 -mx-4 border-t border-line bg-white/95 px-4 py-3 backdrop-blur">
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-muted">
+                <b className="text-lg text-ink">{lessons.length}</b>コマ / <b className="text-ink">{fmtHours(total)}</b>
+              </div>
+              <button type="button" onClick={submit} disabled={pending || lessons.length === 0 || !name.trim()} className="btn-accent flex-1">
+                {pending ? "送信中..." : p.answered ? "変更を送信する" : "回答完了"}
+              </button>
+            </div>
           </div>
         </>
       )}
