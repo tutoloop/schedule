@@ -45,28 +45,46 @@ export function NewScheduleForm({ initialMonth, today }: { initialMonth: string;
     setPendingStart(null);
   };
 
+  /** 指定日以降の同じ曜日（同月内） */
+  const sameWeekdayDates = (from: string) =>
+    daysInMonth(month).filter((d) => weekdayOf(d) === weekdayOf(from) && d >= from);
+
+  /** 時間帯を複数日に追加（既存と重なる場合は結合） */
+  const mergeInto = (list: Slot[], dates: string[], start: number, end: number) => {
+    for (const date of dates) {
+      const same = list.filter((s) => s.date === date && s.start_min <= end && start <= s.end_min);
+      const merged = {
+        date,
+        start_min: Math.min(start, ...same.map((s) => s.start_min)),
+        end_min: Math.max(end, ...same.map((s) => s.end_min)),
+      };
+      for (const s of same) list.splice(list.indexOf(s), 1);
+      list.push(merged);
+    }
+    return list;
+  };
+
   /** 空き時間帯を追加（毎週◯曜オプション対応） */
   const addSlot = (start: number, end: number) => {
     if (!selected) return;
-    const dates = repeatWeekly
-      ? daysInMonth(month).filter((d) => weekdayOf(d) === weekdayOf(selected) && d >= selected)
-      : [selected];
+    const dates = repeatWeekly ? sameWeekdayDates(selected) : [selected];
+    setSlots((prev) => mergeInto([...prev], dates, start, end));
+    setPendingStart(null);
+  };
+
+  /** チェックONにした時点で、選択日の既存の時間帯を以降の同じ曜日へ即反映する */
+  const toggleRepeatWeekly = (checked: boolean) => {
+    setRepeatWeekly(checked);
+    if (!checked || !selected) return;
+    const laterDates = sameWeekdayDates(selected).filter((d) => d !== selected);
+    if (laterDates.length === 0) return;
     setSlots((prev) => {
       const next = [...prev];
-      for (const date of dates) {
-        // 既存と重なる場合は結合
-        const same = next.filter((s) => s.date === date && s.start_min <= end && start <= s.end_min);
-        const merged = {
-          date,
-          start_min: Math.min(start, ...same.map((s) => s.start_min)),
-          end_min: Math.max(end, ...same.map((s) => s.end_min)),
-        };
-        for (const s of same) next.splice(next.indexOf(s), 1);
-        next.push(merged);
+      for (const s of prev.filter((x) => x.date === selected)) {
+        mergeInto(next, laterDates, s.start_min, s.end_min);
       }
       return next;
     });
-    setPendingStart(null);
   };
 
   const removeSlot = (slot: Slot) => setSlots((prev) => prev.filter((s) => s !== slot));
@@ -155,8 +173,8 @@ export function NewScheduleForm({ initialMonth, today }: { initialMonth: string;
           </details>
 
           <label className="mt-3 flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={repeatWeekly} onChange={(e) => setRepeatWeekly(e.target.checked)} className="size-4 accent-teal" />
-            追加するとき、{fmtMonthShort(month)}の毎週{WEEKDAYS[weekdayOf(selected)]}曜（この日以降）にも同じ時間を入れる
+            <input type="checkbox" checked={repeatWeekly} onChange={(e) => toggleRepeatWeekly(e.target.checked)} className="size-4 accent-teal" />
+            {fmtMonthShort(month)}の毎週{WEEKDAYS[weekdayOf(selected)]}曜（この日以降）にも同じ時間を入れる
           </label>
 
           <ul className="mt-3 flex flex-wrap gap-2">
