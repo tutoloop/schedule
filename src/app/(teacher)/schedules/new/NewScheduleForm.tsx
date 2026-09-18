@@ -72,18 +72,25 @@ export function NewScheduleForm({ initialMonth, today }: { initialMonth: string;
     setPendingStart(null);
   };
 
-  /** チェックONにした時点で、選択日の既存の時間帯を以降の同じ曜日へ即反映する */
+  /**
+   * チェックON: 選択日の既存の時間帯を以降の同じ曜日へ即反映する
+   * チェックOFF: 以降の同じ曜日にある、選択日と同じ時間帯を消す
+   */
   const toggleRepeatWeekly = (checked: boolean) => {
     setRepeatWeekly(checked);
-    if (!checked || !selected) return;
+    if (!selected) return;
     const laterDates = sameWeekdayDates(selected).filter((d) => d !== selected);
     if (laterDates.length === 0) return;
     setSlots((prev) => {
-      const next = [...prev];
-      for (const s of prev.filter((x) => x.date === selected)) {
-        mergeInto(next, laterDates, s.start_min, s.end_min);
+      const base = prev.filter((x) => x.date === selected);
+      if (checked) {
+        const next = [...prev];
+        for (const s of base) mergeInto(next, laterDates, s.start_min, s.end_min);
+        return next;
       }
-      return next;
+      return prev.filter(
+        (s) => !(laterDates.includes(s.date) && base.some((b) => b.start_min === s.start_min && b.end_min === s.end_min)),
+      );
     });
   };
 
