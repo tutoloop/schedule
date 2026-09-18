@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrashButton } from "./TrashButton";
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { one } from "@/lib/types";
@@ -89,8 +90,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
             const total = r.lessons.filter((l) => l.status === "active").reduce((a, l) => a + (l.end_min - l.start_min), 0);
             const count = r.lessons.filter((l) => l.status === "active").length;
             return (
-              <li key={r.id}>
-                <Link href={`/schedules/${r.id}`} className="card block hover:border-teal">
+              <li key={r.id} className="relative">
+                <Link href={`/schedules/${r.id}`} className="card block pr-14 hover:border-teal">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="text-lg font-bold">{r.title}</div>
@@ -116,6 +117,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
                     {answered && <span>{count}コマ / 合計 <b className="text-ink">{fmtHours(total)}</b></span>}
                   </div>
                 </Link>
+                <TrashButton scheduleId={r.id} answered={answered} title={r.title} />
               </li>
             );
           })}

@@ -301,8 +301,13 @@ async function notifyEdit(schedule: Schedule, teacherEmail: string, editorEmail:
 }
 
 export async function deleteSchedule(scheduleId: string) {
+  await deleteScheduleInPlace(scheduleId);
+  redirect("/dashboard");
+}
+
+/** 一覧画面から削除（リダイレクトせず、一覧を再検証するだけ） */
+export async function deleteScheduleInPlace(scheduleId: string) {
   const { admin, schedule } = await authorizeSchedule(scheduleId);
   await admin.from("schedules").delete().eq("id", schedule.id);
   revalidatePath("/dashboard");
-  redirect("/dashboard");
 }
